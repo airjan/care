@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\{EventCreateRequest};
-
+use Carbon\Carbon;
 use App\Interfaces\{
         EventsInterface,
         EventInviteeInterface
@@ -24,15 +24,46 @@ class EventController extends Controller
 
     public function create(EventCreateRequest $request)
     {
-       $event = $this->Events->save($request->all() + ['user_id' => auth()->user()->id]);
-       $invitees = array_unique($request->input('invitees'));
 
-       foreach($invitees as $invitee) {
+        $expectedEndDate   = Carbon::parse($request->input('startDateTime'));
+        $expected_enddatetime = $expectedEndDate->addMinutes($request->input('duration'));
+        if (strtolower($request->input('frequency')) == 'weekly'){
+            if (empty($request->input('endDateTime'))){
+
+                $tempnewEndDate = Carbon::parse($request->input('startDateTime'));
+                $request->merge(['endDateTime' => $tempnewEndDate->addDays(7)]); // 1 week
+             
+            }
+        }
+
+        if (strtolower($request->input('frequency')) == 'monthly'){
+            if (empty($request->input('endDateTime'))){
+
+                $tempnewEndDate = Carbon::parse($request->input('startDateTime'));
+                $request->merge(['endDateTime' => $tempnewEndDate->addMonths(1)]); // 1 month
+             
+            }
+        }
+        if ($this->Events->isoverlapping($request, $expected_enddatetime)){
+            return response()->json([
+                'message' => 'Event overlap',
+                
+            ], 301);
+        }
+        
+
+        $event = $this->Events->save($request->all() + [
+                    'user_id' => auth()->user()->id,
+                    'expected_enddatetime' => $expected_enddatetime
+                ]);
+        $invitees = array_unique($request->input('invitees'));
+
+        foreach($invitees as $invitee) {
             $this->EventInvitee->save([
                     'user_id' =>$invitee,
                     'event_id'  => $event->id
                 ]);
-       }
+        }
 
        $event->invitees  = $invitees;
         return response()->json([
