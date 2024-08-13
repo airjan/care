@@ -12,7 +12,13 @@ class Events extends Model
     use HasFactory;
     protected  $fillable =['user_id','eventName','frequency','duration','startDateTime','endDateTime','expected_enddatetime'];
 
-    
+    // accessor to compute for the duration startdate + duration
+    public function getEndDurationAttribute()
+    {
+        $startDateTime = Carbon::parse($this->startDateTime);
+        $endDateTime = $startDateTime->addMinutes($this->duration);
+        return $endDateTime->format('Y-m-d H:i:s');
+    }
 
     public function invitees(): hasMany 
     {
