@@ -55,7 +55,7 @@ Laravel has the most extensive and thorough [documentation](https://laravel.com/
 
 
 ## Running guide : once everything is setup 
-## default username / password: created default username /  password and seed to table user when run migration (defaultuser@email.com / 12345678)
+## created default username /  password and seed to table user when run migration (defaultuser@email.com / 12345678)
   
   - Api using postman 
    	- API Credentials endpoint 
